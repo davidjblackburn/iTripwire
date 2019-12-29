@@ -4,7 +4,7 @@ param (
     $websession,
     [string]$ruleid      = "-1y2p0lj36e7m7:-1y2p0ij42wmy7",  # Use a ruleId for testing.
     [string]$nodeid      = "-1y2p0ij39e2bv:-1y2p0ij29b9jb",  # Use a nodeId for testing.
-    [string]$systemname  = "tripwire-prod.company.com",
+    [string]$systemname  = "tripwire-prod.company.com",      # Use the Tripwire server name.
     [int]$pagelimit      = 100
     )
 add-type @"
