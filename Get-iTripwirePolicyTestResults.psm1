@@ -1,54 +1,12 @@
 ﻿Function Get-iTripwirePolicyTestResults
 {
 param (
-    [string]$server          = "tripwire-prod.oa.caiso.com",
-    [string]$policyname      = "CAISO Required Controls",
+    [string]$systemname      = "tripwire-prod.company.com",      # Use the Tripwire server name.
+    [string]$policyname      = "Policy name",                    # Test results for any policy that contains 'Policy name' 
             $websession,
     [int]   $pagelimit       = 100,
-    [int]   $pagestart       = 0,
-    [string]$logserver       = "tripwire-prod.oa.caiso.com",
-    [string]$logdatabase     = "infosecrisks_prod",
-    [string]$logtable        = "infosecrisksLog",
-    [switch]$logtoout        = $false,
-    [switch]$logtoserver     = $false,
-    [int]$severity           = 6
-
+    [int]   $pagestart       = 0
 )
-
-$start_time                  = Get-Date
-
-$syslog_Array                = Set-SyslogArr
-
-$syslog_Array.facility       = 22
-$syslog_Array.severity       = $severity
-$syslog_Array.version        = 1
-$syslog_Array.hostname       = ([System.Net.DNS]::GetHostByName('').HostName).ToLower()
-$syslog_Array.appname        = ($MyInvocation.MyCommand).Name
-$syslog_Array.procid         = "-"
-$syslog_Array.msgid          = "calc"
-$syslog_Array.structureddata = "-"
-$syslog_Array.logdatabase    = $logdatabase
-$syslog_Array.logserver      = $logserver
-$syslog_Array.logtable       = $logtable
-$syslog_Array.logtoout       = $logtoout
-$syslog_Array.logtoserver    = $logtoserver
-
-
-if ( $severity -lt 0 -or $severity -gt 7 )
-{
-    $syslog_Array.msg        = "-LogLevel must be a number in the range [0..7]. Quitting collection."
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-
-    Write-SyslogArr $syslog_Array
-    return
-}
-
-if ( $severity -ge 6 )
-{
-    $syslog_Array.msg        = "Start script"
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-    Write-SyslogArr $syslog_Array
-}
 
 add-type @"
     using System.Net;
@@ -67,15 +25,9 @@ add-type @"
 $headerplaintext = @{"Accept"="text/plain"}
 $headerappjson   = @{"Accept"="application/json"}
 
-$uri           = "https://$server/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart"
+$uri           = "https://$systemname/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart"
 
-if ( $severity -ge 6 )
-{
-    $syslog_Array.msg        = "Get list of Tripwire policies"
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-    Write-SyslogArr $syslog_Array
-}
-
+# Get list of Tripwire policies
 $results       = Invoke-RestMethod -uri $uri -Method get -WebSession $websession
 $policylist    = $results
 $pagestart_t   = $pagestart
@@ -85,20 +37,14 @@ if ($results.count -eq $pagelimit)
     do
     {
             $pagestart_t       += $pagelimit
-            $uri                = "https://$server/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart_t"
+            $uri                = "https://$systemname/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart_t"
             $results            = Invoke-RestMethod -uri $uri -Method get -WebSession $websession
             $policylist        += $results
 
     } while ($results.count -eq $pagelimit)
 }
 
-if ( $severity -ge 6 )
-{
-    $syslog_Array.msg        = "Get list of Tripwire policies matching '$policyname'"
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-    Write-SyslogArr $syslog_Array
-}
-
+# Get list of Tripwire policies matching '$policyname'
 $policiescaisorequired         = $policylist | Where-Object {$_.name -match $policyname}
 
 $resultstemplate                = $null
@@ -134,15 +80,9 @@ foreach ($policy in $policiescaisorequired)
     
     $pagestart_t     = $pagestart
 
-    $uri             = "https://$server/api/v1/policytests?policyId=$policyId"
+    $uri             = "https://$systemname/api/v1/policytests?policyId=$policyId"
 
-    if ( $severity -ge 6 )
-    {
-        $syslog_Array.msg        = "Get Policy tests for $policyName"
-        $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-        Write-SyslogArr $syslog_Array
-    }
-
+    # Get Policy tests for '$policyName'
     $policytestlist  = Invoke-RestMethod -uri $uri -Method get -WebSession $websession -Headers $headerappjson
     
     foreach ($policytest in $policytestlist)
@@ -159,13 +99,7 @@ foreach ($policy in $policiescaisorequired)
             $policytestElementNameConditions = $policytest.elementnameconditions
             $policytestVersionConditions     = $policytest.versionconditions
 
-            if ( $severity -ge 6 )
-            {
-                $syslog_Array.msg        = "Get Policy test results for $policyname : $policytestName"
-                $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-                Write-SyslogArr $syslog_Array
-            }
-
+            # Get Policy test results for '$policyname : $policytestName'
             $pagestart_t              = $pagestart
             $uri                      = "https://tripwire-prod.oa.caiso.com/api/v1/policytestresults/latest?policyTestId=$policytestId&pageLimit=$pagelimit&pageStart=$pagestart_t"
             $results                  = Invoke-RestMethod -Uri $uri -Method get -WebSession $websession -Headers $headerappjson
@@ -180,12 +114,7 @@ foreach ($policy in $policiescaisorequired)
                         $results                       = Invoke-RestMethod -uri $uri -Method get -WebSession $websession
                         $policytestresultslist        += $results
 
-                        if ( $severity -ge 7 )
-                        {
-                            $syslog_Array.msg        = "Get Policy test results for $policyname : $policytestName : $pagestart_t"
-                            $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-                            Write-SyslogArr $syslog_Array
-                        }
+                        # Get Policy test results for '$policyname : $policytestName : $pagestart_t'
 
                 } while ($results.count -eq $pagelimit)
             }
@@ -206,17 +135,12 @@ foreach ($policy in $policiescaisorequired)
                 $policytestresultsActual            = $policytestresult.actual
                 $policytestresultsSummaryState      = $policytestresult.summarystate
 
-                if ( $severity -ge 6 )
-                {
-                    $syslog_Array.msg        = "Get Policy test results for $policyname : $policytestName : $policytestresultsNodeLabel"
-                    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-                    Write-SyslogArr $syslog_Array
-                }
+                # Get Policy test results for $policyname : '$policytestName : $policytestresultsNodeLabel'
 
                 if ($policytestresultsState -eq "FAILED")
                 {
                     $versioncontent       = $null
-                    $uri                  = "https://$server/api/v1/versions/$policytestresultsElementVersionId"
+                    $uri                  = "https://$systemname/api/v1/versions/$policytestresultsElementVersionId"
                     $versioncontente      = Invoke-RestMethod -uri $uri -Method get -WebSession $websession -Headers $headerappjson
                     $versioncontentexists = $versioncontente.exists
                     $versioncontentmd5    = $versioncontente.md5
@@ -226,7 +150,7 @@ foreach ($policy in $policiescaisorequired)
 
                     if ($versioncontentexists -eq $true)
                     {
-                            $uri                = "https://$server/api/v1/versions/$policytestresultsElementVersionId/attributes"
+                            $uri                = "https://$systemname/api/v1/versions/$policytestresultsElementVersionId/attributes"
                             $versioncontenta     = Invoke-RestMethod -uri $uri -Method get -WebSession $websession -Headers $headerappjson
                             $versioncontentavalue= $versioncontente.md5
                             if ($versioncontentavalue -eq "d41d8cd98f00b204e9800998ecf8427e")
@@ -237,12 +161,12 @@ foreach ($policy in $policiescaisorequired)
                             {
                                 if ($versioncontentmd5.length -gt 0 -or $versioncontentsha1.length -gt 0 -or $versioncontentsha256.length -gt 0 -or $versioncontentsha512.length -gt 0)
                                 {
-                                    $uri                = "https://$server/api/v1/versions/$policytestresultsElementVersionId/content"
+                                    $uri                = "https://$systemname/api/v1/versions/$policytestresultsElementVersionId/content"
                                     $versioncontent     = Invoke-RestMethod -uri $uri -Method get -WebSession $websession -Headers $headerplaintext
                                 }
                                 else
                                 {
-                                    #$uri                = "https://$server/api/v1/versions/$elementversionid/attributes"
+                                    #$uri                = "https://$systemname/api/v1/versions/$elementversionid/attributes"
                                     #$versioncontent     = Invoke-RestMethod -uri $uri -Method get -WebSession $websession -Headers $headerappjson
                                     $versioncontent     = "Multiple attributes"
                                 }
@@ -258,9 +182,6 @@ foreach ($policy in $policiescaisorequired)
                     $versioncontent     = "Check passed: not collected"
                 }
 
-
-                #Write-Output "$policyName ## $policytestName ## $nodelabel ## $state"
-                #Write-Output "$policyName"
                 $resultstemplate_t      = $null
                 $resultstemplate_t      = "" | Select PolicyId, PolicyName, PolicyDescription, PolicyModifiedTime, PolicyImportedTime, PolicyTrackingId, PolicyPurgeOldData `
                                                    , PolicyPurgeDataOlderThanDays, PolicyNodeScope ,PolicytestId, PolicytestName, PolicytestDescription, PolicytestTrackingId, PolicytestSeverity, PolicytestModifiedTime `
@@ -331,14 +252,6 @@ $results                        = @()
     }
   
 
-}
-
-$timespan                    = (New-TimeSpan -Start $start_time -End (Get-Date)).TotalMinutes
-if ( $severity -ge 6 )
-{
-    $syslog_Array.msg        = "End script after $timespan minutes"
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-    Write-SyslogArr $syslog_Array
 }
 
 $results_t
