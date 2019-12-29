@@ -3,16 +3,11 @@
 param (
     $websession,
     [string]$exists      = "True",
-    [string]$elementid   = "-1y2p0ij32e8cc:-1y2p0ij32cixd",
-    [string]$systemname  = "tripwire-prod.oa.caiso.com",
-    [string]$logserver   = "tripwire-prod.oa.caiso.com",
+    [string]$elementid   = "-1y2p0ij32e8cc:-1y2p0ij32cixd",   # Use an elementId for testing.
+    [string]$systemname  = "tripwire-prod.company.com",       # Use the Tripwire server name.
     [int]$pagelimit      = 100,
-    [int]$pagestart      = 0,
-    [string]$logdatabase = "infosecrisks_prod",
-    [string]$logtable    = "InfoSecRisksLog",
-    [switch]$logtoout    = $true,
-    [switch]$logtoserver = $false,
-    [int]$severity       = 6
+    [int]$pagestart      = 0
+
     )
 $syslog_Array                = Set-SyslogArr
 
