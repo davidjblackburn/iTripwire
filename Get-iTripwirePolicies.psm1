@@ -1,7 +1,7 @@
 ﻿Function Get-iTripwirePolicies
 {
 param (
-    [string]$server          = "tripwire-prod.company.com", # Use the Tripwire server name.
+    [string]$systemname      = "tripwire-prod.company.com",       # Use the Tripwire server name.
     [string]$policyname      = "",
             $websession,
     [int]   $pagelimit       = 100,
@@ -28,7 +28,7 @@ add-type @"
 $headerplaintext = @{"Accept"="text/plain"}
 $headerappjson   = @{"Accept"="application/json"}
 
-$uri           = "https://$server/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart"
+$uri           = "https://$systemname/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart"
 
 # Get list of Tripwire policies
 $results       = Invoke-RestMethod -uri $uri -Method get -WebSession $websession -Headers $headerappjson
@@ -40,7 +40,7 @@ if ($results.count -eq $pagelimit)
     do
     {
             $pagestart_t       += $pagelimit
-            $uri                = "https://$server/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart_t"
+            $uri                = "https://$systemname/api/v1/policies?pageLimit=$pagelimit&pageStart=$pagestart_t"
             $results            = Invoke-RestMethod -uri $uri -Method get -WebSession $websession
             $policylist        += $results
 
