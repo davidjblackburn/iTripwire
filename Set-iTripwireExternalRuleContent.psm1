@@ -2,9 +2,8 @@
 {
 param (
     $websession             = "",
-    [string]$systemname     = "tripwire-prod.oa.caiso.com",
-    [string]$logserver      = "tripwire-prod.oa.caiso.com",
-    [string]$nodeid         = "ftripwirep05.oa.caiso.com",
+    [string]$systemname      = "tripwire-prod.company.com"      # Use the Tripwire server name.
+    [string]$nodeid         = "",
     [string]$ruleid         = "",
     [string]$elementname    = "test-test",
     [string]$content        = $null,
@@ -13,41 +12,11 @@ param (
     [string]$severity_v     = "0",
     [string]$timedetected   = "2018-05-25T22:01:24.772Z",
     [string]$creationtime   = "2018-05-25T22:01:24.772Z",
-    [string]$completiontime = "2018-05-25T22:01:24.772Z",
-    [string]$logdatabase    = "infosecrisks_prod",
-    [string]$logtable       = "InfoSecRisksLog",
-    [switch]$logtoout       = $true,
-    [switch]$logtoserver    = $false,
-    [int]$severity          = 6
+    [string]$completiontime = "2018-05-25T22:01:24.772Z"
     )
 
-$syslog_Array                = Set-SyslogArr
 $headerplaintext             = @{"Accept"="text/plain"}
 $headerappjson               = @{"Accept"="application/json"}
-
-$syslog_Array.facility       = 22
-$syslog_Array.severity       = $severity
-$syslog_Array.version        = 1
-$syslog_Array.hostname       = ([System.Net.DNS]::GetHostByName('').HostName).ToLower()
-$syslog_Array.appname        = ($MyInvocation.MyCommand).Name
-$syslog_Array.procid         = "-"
-$syslog_Array.msgid          = "calc"
-$syslog_Array.structureddata = "-"
-$syslog_Array.logdatabase    = $logdatabase
-$syslog_Array.logserver      = $logserver
-$syslog_Array.logtable       = $logtable
-$syslog_Array.logtoout       = $logtoout
-$syslog_Array.logtoserver    = $logtoserver
-
-
-if ( $severity -lt 0 -or $severity -gt 7 )
-{
-    $syslog_Array.msg        = "-LogLevel must be a number in the range [0..7]. Quitting collection."
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-
-    Write-SyslogArr $syslog_Array
-    return
-}
 
 add-type @"
     using System.Net;
@@ -63,23 +32,9 @@ add-type @"
 [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-if ( $severity -ge 7 )
-{
-    $syslog_Array.msg        = "Start script."
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-
-    Write-SyslogArr $syslog_Array
-}
-
 if ($content -ne "" -and $contentbase64 -ne "")
 { 
-    if ( $severity -ge 7 )
-    {
-        $syslog_Array.msg        = "No content, exiting."
-        $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 
-        Write-SyslogArr $syslog_Array
-    }
     return 
 }
 
