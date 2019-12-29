@@ -3,43 +3,12 @@
 param (
     $websession,
     [string]$exists      = "True",
-    [string]$nodeId      = "-1y2p0ij32e8bv:-1y2p0ij32e7c4",    #nodeId fop FTRIPWIREP05
-    [string]$ruleId      = "-1y2p0ij32e8b6:-1y2p0ij31ssp3",    #nodeId fop FTRIPWIREP05
-    [string]$systemname  = "tripwire-prod.oa.caiso.com",
-    [string]$logserver   = "tripwire-prod.oa.caiso.com",
+    [string]$nodeId      = "-1y2p0ij32e8bv:-1y2p0ij32e7c4",    # Use a nodeId for testing.
+    [string]$ruleId      = "-1y2p0ij32e8b6:-1y2p0ij31ssp3",    # Use a ruleId for testing.
+    [string]$systemname  = "tripwire-prod.company.com",        # Use the Tripwire server name.
     [int]$pagelimit      = 100,
-    [int]$pagestart      = 0,
-    [string]$logdatabase = "infosecrisks_prod",
-    [string]$logtable    = "InfoSecRisksLog",
-    [switch]$logtoout    = $true,
-    [switch]$logtoserver = $false,
-    [int]$severity       = 6
+    [int]$pagestart      = 0
     )
-$syslog_Array                = Set-SyslogArr
-
-$syslog_Array.facility       = 22
-$syslog_Array.severity       = $severity
-$syslog_Array.version        = 1
-$syslog_Array.hostname       = ([System.Net.DNS]::GetHostByName('').HostName).ToLower()
-$syslog_Array.appname        = ($MyInvocation.MyCommand).Name
-$syslog_Array.procid         = "-"
-$syslog_Array.msgid          = "calc"
-$syslog_Array.structureddata = "-"
-$syslog_Array.logdatabase    = $logdatabase
-$syslog_Array.logserver      = $logserver
-$syslog_Array.logtable       = $logtable
-$syslog_Array.logtoout       = $logtoout
-$syslog_Array.logtoserver    = $logtoserver
-
-
-if ( $severity -lt 0 -or $severity -gt 7 )
-{
-    $syslog_Array.msg        = "-LogLevel must be a number in the range [0..7]. Quitting collection."
-    $syslog_Array.timestamp  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-
-    Write-SyslogArr $syslog_Array
-    return
-}
 
 add-type @"
     using System.Net;
