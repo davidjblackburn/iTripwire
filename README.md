@@ -1,2 +1,2 @@
 # iTripwire
-Powershell functions for the Tripwire Enterprise API
+Powershell interface for the Tripwire Enterprise API
