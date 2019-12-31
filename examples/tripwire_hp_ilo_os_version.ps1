@@ -38,7 +38,6 @@ $rulename                 = "OSVERSION (ILO)"
 $elementname              = "ilo-os-version"
 
 $ruleider                 = ($ruleslist | Where-Object {$_.name -like $rulename -and $_.type -eq "External Rule"}).id
-$ruleidcovr               = ($ruleslist | Where-Object {$_.name -like $rulename -and $_.type -eq "Command Output Validation Rule"}).id
 
 foreach ($ilo in $ilolist) 
 {
