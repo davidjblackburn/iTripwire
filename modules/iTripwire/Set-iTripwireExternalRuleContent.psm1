@@ -2,7 +2,7 @@
 {
 param (
     $websession             = "",
-    [string]$systemname      = "tripwire-prod.company.com"      # Use the Tripwire server name.
+    [string]$systemname      = "tripwire-prod.company.com",     # Use the Tripwire server name.
     [string]$nodeid         = "",
     [string]$ruleid         = "",
     [string]$elementname    = "test-test",
