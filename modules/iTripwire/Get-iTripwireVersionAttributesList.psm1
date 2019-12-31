@@ -3,7 +3,7 @@
 param (
     $websession,
     [string]$versionid   = "-1y2p0ij32e8ch%3A-1y2p0ij32ci5a",  # Use a versionId for testing.
-    [string]$systemname  = "tripwire-prod.company.com",        # Use the Tripwire server name.
+    [string]$systemname  = "tripwire-prod.company.com"         # Use the Tripwire server name.
     )
 
 add-type @"
